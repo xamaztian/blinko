@@ -33,5 +33,5 @@ jobs:
           push: true
           no-cache: true
           tags: |
-            dlhtx/blinko:latest
-            dlhtx/blinko:${{ env.VERSION }}
+            blinkospace/blinko:latest
+            blinkospace/blinko:${{ env.VERSION }}

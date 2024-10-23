@@ -2,7 +2,7 @@
 
 services:
   blinko-website:
-    image: dlhtx/blinko:latest
+    image: blinkospace/blinko:latest
     container_name: blinko-website
     environment:
       NODE_ENV: production
