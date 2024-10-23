@@ -1,0 +1,211 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::selection {
+  background-color: #47a3f3;
+  color: #fefefe;
+}
+
+::marker {
+  color: var(--desc) !important;
+}
+
+.my-masonry-grid {
+  display: -webkit-box;
+  /* Not needed if autoprefixing */
+  display: -ms-flexbox;
+  /* Not needed if autoprefixing */
+  display: flex;
+  margin-left: -10px;
+  /* gutter size offset */
+  width: auto;
+}
+
+.my-masonry-grid_column {
+  padding-left: 10px;
+  /* gutter size */
+  background-clip: padding-box;
+}
+
+/* Style your items */
+.my-masonry-grid_column>div {
+  /* change div to reference your elements you put in <Masonry> */
+  margin-bottom: 10px;
+}
+
+.PhotoView__PhotoBox img {
+  border-radius: 30px;
+}
+
+html,
+body {
+  scroll-behavior: smooth;
+  height: 100%;
+  overflow-y: hidden;
+}
+
+
+/* menu  tree list  */
+.tree ul {
+  list-style: none !important;
+}
+
+/* menu  tree list  */
+.tree li {
+  list-style: none !important;
+}
+
+.blinko-tag {
+  margin-right: 4px;
+  margin-left: 4px;
+  color: var(--tag);
+  background: var(--tag-foreground);
+  border-radius: 7px;
+  font-size: 13px;
+  padding: 3px;
+}
+
+
+#__next {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  :focus {
+    outline: none;
+  }
+}
+
+
+@layer base {
+  :root {
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(222.2 47.4% 11.2%);
+    --sencondbackground: #f8f8f8;
+
+    --hover: #eaeaec;
+    --hover-foreground: hsl(215.4 16.3% 46.9%);
+
+    /* like: time  */
+    --desc: #808080;
+    /* like: no data found  */
+    --ignore: #bababa;
+    --tag:  #c35af7;
+    --tag-foreground: #fceefe;
+    --scrollbar: #f1f1f1;
+
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(222.2 47.4% 11.2%);
+
+    --muted: hsl(210 40% 96.1%);
+    --muted-foreground: hsl(215.4 16.3% 46.9%);
+
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(222.2 47.4% 11.2%);
+
+    --border: hsl(253, 53%, 59%);
+    --input: hsl(214.3 31.8% 91.4%);
+
+    --primary: black;
+    --primary-foreground: hsl(210 40% 98%);
+
+    --secondary: hsl(253, 53%, 59%);
+    --secondary-foreground: hsl(210 40% 98%);
+
+    --accent: hsl(240, 5%, 96%);
+    --accent-foreground: hsl(222.2 47.4% 11.2%);
+
+    --destructive: hsl(0 100% 50%);
+    --destructive-foreground: hsl(210 40% 98%);
+
+    --ring: hsl(215 20.2% 65.1%);
+
+    --header: rgb(249 250 251 / 0.9);
+
+    --radius: 0.5rem;
+
+    --md-editor-bg: #fff;
+    --md-editor-text: hsl(222.2 47.4% 11.2%);
+    --md-editor-separator: #bcbcbe;
+    --md-editor-border: #e5e7eb;
+    --shadow: 0 0 20px rgb(195 195 195 / 36%)
+  }
+
+  .dark {
+    --background: #121212;
+    --foreground: hsl(213 31% 91%);
+    --sencondbackground: #2a2a2a;
+
+    --hover: #292929;
+    --hover-foreground: hsl(215.4 16.3% 46.9%);
+
+    --muted: hsl(224, 20%, 19%);
+    --muted-foreground: hsl(215.4 16.3% 56.9%);
+
+    --desc: #999999;
+    --ignore: #6d6d6d;
+    --tag: #c35af7;
+    --tag-foreground: #1b1b1b;
+
+    --scrollbar: #1b1b1b;
+
+    --popover: hsl(224 71% 4%);
+    --popover-foreground: hsl(215 20.2% 65.1%);
+
+    --card: hsl(224 71% 4%);
+    --card-foreground: hsl(213 31% 91%);
+
+    --border: hsl(250, 5%, 25%);
+    --input: hsl(216 34% 17%);
+
+    --primary: #7A1CAC;
+    --primary-foreground: hsl(0deg 0% 100%);
+
+    --secondary: hsl(253, 53%, 59%);
+    --secondary-foreground: hsl(210 40% 98%);
+
+    --accent: hsl(214, 9%, 15%);
+    --accent-foreground: hsl(210 40% 98%);
+
+    --destructive: hsl(0 63% 31%);
+    --destructive-foreground: hsl(210 40% 98%);
+
+    --ring: hsl(216 34% 17%);
+
+    --header: rgba(0, 0, 0, 0.8);
+
+    --radius: 0.5rem;
+
+    --md-editor-bg: #09090b;
+    --md-editor-text: hsl(210 40% 98%);
+    --md-editor-separator: #4b4b4d;
+    --md-editor-border: #27272a;
+    --shadow: 0
+  }
+}
+
+@layer components {}
+
+
+
+::-webkit-scrollbar {
+  background: transparent;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  transition: all 1s;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 1px;
+  transition: all 1s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(111, 111, 111, 0.8);
+  transition: all 1s;
+}
