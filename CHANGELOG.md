@@ -1,4 +1,10 @@
-# 1.0.0 (2024-12-09)
+## [0.21.1] (2024-12-09)
+
+### Bug Fixes
+
+* clear editor state and emit view mode change in EditorStore [#268](https://github.com/blinko-space/blinko/issues/268) ([c4be055](https://github.com/blinko-space/blinko/commit/c4be055e4449ffd7abfad57d572f32cbdedf0100))
+
+## [0.21.0] (2024-12-09)
 
 
 ### Bug Fixes
