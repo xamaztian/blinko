@@ -287,10 +287,12 @@ export class EditorStore {
   }
 
   clearEditor = () => {
+    this.mdxEditorRef?.current?.setMarkdown('')
     this.onChange?.('');
     this.files = [];
     this.references = []
     this.noteListByIds.value = []
+    eventBus.emit('editor:setViewMode', 'rich-text');
   }
 
   constructor() {
