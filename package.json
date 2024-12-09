@@ -1,6 +1,6 @@
 {
   "name": "blinko",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "repository": "https://github.com/blinko-space/blinko.git",
   "private": true,
   "browser": {
@@ -195,5 +195,9 @@
   },
   "engines": {
     "node": ">=18.17.1"
+  },
+  "publishConfig": {
+    "tag": "latest",
+    "registry": "https://registry.npmjs.org/"
   }
 }
