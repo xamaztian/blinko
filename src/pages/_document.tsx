@@ -23,11 +23,13 @@ export default function _Document(props: DocumentProps) {
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#2B5797" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#ffffff"/>
 
         <link rel="manifest" href="/manifest.json" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <title>Blinko</title>
+
+        <meta name="apple-mobile-web-app-status-bar-style" content="#ffffff"/>
       </Head>
       <body>
         <Main />

@@ -74,11 +74,24 @@ export class UserStore implements User, Store {
     this.setData(args);
   }
 
+  updatePWAColor(theme: string) {
+    const themeColor = theme === 'dark' ? '#1C1C1E' : '#F8F8F8';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
+    document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute('content', themeColor);
+  }
+
   use() {
     const { data: session } = useSession();
     const { t, i18n } = useTranslation()
-    const { setTheme } = useTheme()
+    const { setTheme, theme } = useTheme()
     const router = useRouter()
+
+    useEffect(() => {
+      if (theme) {
+        this.updatePWAColor(theme);
+      }
+    }, [theme]);
+
     useEffect(() => {
       const userStore = RootStore.Get(UserStore);
       if (!userStore.isLogin && session) {
@@ -87,7 +100,12 @@ export class UserStore implements User, Store {
         userStore.ready({ ...session.user, token: session.token });
         userStore.userInfo.call(Number(this.id)).then(async () => {
           const config = userStore.blinko.config.value || await userStore.blinko.config.getOrCall();
-          setTheme(config?.theme == 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : (config?.theme ?? 'light'))
+          const newTheme = config?.theme == 'system' 
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') 
+            : (config?.theme ?? 'light');
+          
+          setTheme(newTheme);
+          this.updatePWAColor(newTheme);
           RootStore.Get(BaseStore).changeLanugage(i18n, config?.language ?? 'en');
         });
       }
