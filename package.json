@@ -2,27 +2,27 @@
   "name": "blinko-monorepo",
   "version": "1.2.2",
   "private": true,
-  "packageManager": "bun@1.2.8",
+  "packageManager": "npm@10.5.0",
   "workspaces": [
     "app",
     "server"
   ],
   "scripts": {
-    "dev": "cd app && bun run tauri dev",
-    "build:web": "turbo run build:web",
-    "test": "turbo run test",
-    "start": "cd server && bun run start",
-    "clean": "turbo run clean && rm -rf node_modules",
-    "dev:backend": "dotenv turbo run dev --filter=@blinko/backend",
-    "dev:frontend": "dotenv turbo run dev --filter=@blinko/frontend",
-    "postinstall": "turbo run prisma:generate --filter=@blinko/backend",
-    "setup": "bun install",
+    "dev": "npm --workspace app run tauri:dev",
+    "build:web": "npm --workspace server run build:web && npm --workspace app run build:web",
+    "test": "echo \"No tests configured\"",
+    "start": "npm --workspace server run start",
+    "clean": "rm -rf node_modules app/node_modules server/node_modules",
+    "dev:backend": "dotenv npm --workspace server run dev",
+    "dev:frontend": "dotenv npm --workspace app run dev",
+    "postinstall": "npm run prisma:generate",
+    "setup": "npm install",
     "prisma:generate": "cd prisma && prisma generate",
     "prisma:migrate:dev": "cd prisma && prisma migrate dev",
     "prisma:migrate:deploy": "cd prisma && prisma migrate deploy",
     "prisma:studio": "cd prisma && prisma studio",
     "build:seed": "tsup prisma/seed.ts --outDir dist",
-    "seed": "bun dist/seed.js",
+    "seed": "node dist/seed.js",
     "build:blinko:types": "tsc -p tsconfig.blinko.json"
   },
   "devDependencies": {
@@ -30,13 +30,11 @@
     "concurrently": "^9.1.2",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
-    "turbo": "latest",
     "typescript": "^5.1.6",
     "vite-plugin-pwa": "^1.0.0",
     "workbox-window": "^7.3.0"
   },
   "engines": {
-    "bun": ">=1.0.0",
     "node": ">=20.0.0"
   },
   "dependencies": {

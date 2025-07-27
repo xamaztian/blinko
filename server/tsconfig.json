@@ -19,7 +19,7 @@
       "@prisma/*": ["../prisma/*"],
       "@shared/*": ["../shared/*"]
     },
-    "types": ["bun-types"]
+    "types": []
   },
   "include": ["./**/*", "../shared/**/*", "../dist"],
   "exclude": ["node_modules", "../dist"]

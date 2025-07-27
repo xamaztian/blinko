@@ -1,5 +1,5 @@
 # Build Stage
-FROM oven/bun:latest AS builder
+FROM node:20-bullseye AS builder
 
 # Add Build Arguments
 ARG USE_MIRROR=false
@@ -21,7 +21,7 @@ COPY . .
 # Configure Mirror Based on USE_MIRROR Parameter
 RUN if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
-        echo '{ "install": { "registry": "https://registry.npmmirror.com" } }' > .bunfig.json; \
+        npm config set registry https://registry.npmmirror.com; \
     else \
         echo "Using Default Mirror to Install Dependencies"; \
     fi
@@ -31,31 +31,31 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
         export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
-        bun install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
-        bun install --force @img/sharp-linux-arm64 --no-save; \
+        npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+        npm install --force @img/sharp-linux-arm64 --no-save; \
     fi
 
 # Install Dependencies and Build App
-RUN bun install --unsafe-perm
-RUN bunx prisma generate
-RUN bun run build:web
-RUN bun run build:seed
+RUN npm install --unsafe-perm
+RUN npx prisma generate
+RUN npm --workspace server run build:web && npm --workspace app run build:web
+RUN npm run build:seed
 
 RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
     chmod +x start.sh
 
 
-FROM node:20-alpine as init-downloader
+FROM node:20-bullseye as init-downloader
 
 WORKDIR /app
 
 RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_$(uname -m) && \
     chmod +x /app/dumb-init && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/lib/apt/lists/*
 
 
 # Runtime Stage - Using Alpine as required
-FROM node:20-alpine AS runner
+FROM node:20-bullseye AS runner
 
 # Add Build Arguments
 ARG USE_MIRROR=false
@@ -73,7 +73,7 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-RUN apk add --no-cache openssl vips-dev python3 py3-setuptools make g++ gcc libc-dev linux-headers && \
+RUN apt-get update && apt-get install -y openssl libvips-dev python3 make g++ gcc build-essential && \
     if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
         npm config set registry https://registry.npmmirror.com; \
@@ -111,8 +111,8 @@ RUN echo "Installing additional dependencies..." && \
     # find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
     # npm cache clean --force && \
     rm -rf /tmp/* && \
-    apk del python3 py3-setuptools make g++ gcc libc-dev linux-headers && \
-    rm -rf /var/cache/apk/* /root/.npm /root/.cache
+    apt-get purge -y python3 make g++ gcc build-essential && \
+    rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
 # Expose Port (Adjust According to Actual Application)
 EXPOSE 1111

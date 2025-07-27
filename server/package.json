@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --env-file ../.env --watch index.ts",
-    "build:web": "bun esbuild.config.ts",
-    "start": "NODE_ENV=production dotenv -e ../.env -- bun --env ../dist/index.js"
+    "dev": "ts-node-dev --respawn --env-file ../.env index.ts",
+    "build:web": "node --loader ts-node/register esbuild.config.ts",
+    "start": "NODE_ENV=production dotenv -e ../.env -- node ../dist/index.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.10",
@@ -105,8 +105,9 @@
     "@types/request-ip": "^0.0.41",
     "@types/ws": "^8.5.10",
     "@types/yauzl-promise": "^4.0.1",
-    "bun-types": "latest",
     "esbuild": "^0.25.3",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
     "esbuild-node-externals": "^1.18.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",

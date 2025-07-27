@@ -20,7 +20,7 @@ async function build() {
       sourcemap: true,
       metafile: true,
       banner: {
-        js: '#!/usr/bin/env bun\n',
+        js: '#!/usr/bin/env node\n',
       },
       packages: 'bundle',
       external: [

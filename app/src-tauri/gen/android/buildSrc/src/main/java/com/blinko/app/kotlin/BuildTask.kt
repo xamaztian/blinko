@@ -17,7 +17,7 @@ open class BuildTask : DefaultTask() {
     @TaskAction
     fun assemble() {
         // https://github.com/tauri-apps/tauri/issues/9536
-        val executable = """bun""";
+        val executable = """npx""";
         try {
             runTauriCli(executable)
         } catch (e: Exception) {
