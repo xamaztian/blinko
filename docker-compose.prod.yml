@@ -6,6 +6,7 @@ services:
   blinko-website:
     image: blinkospace/blinko:latest
     container_name: blinko-website
+    platform: linux/arm/v7
     environment:
       NODE_ENV: production
       # NEXTAUTH_URL: http://localhost:1111

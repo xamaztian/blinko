@@ -52,9 +52,9 @@ The backend uses Node.js with TypeScript and tRPC:
 Database schema and migrations using Prisma ORM.
 
 ## Development Workflow
-1. **Frontend development**: `bun run dev:frontend`
-2. **Backend development**: `bun run dev:backend`
-3. **Full stack development**: `bun run dev`
+1. **Frontend development**: `npm run dev:frontend`
+2. **Backend development**: `npm run dev:backend`
+3. **Full stack development**: `npm run dev`
 4. **Database operations**: Use `prisma:*` scripts from root [package.json](mdc:package.json)
 
 ## Technology Stack

@@ -4,9 +4,9 @@
   "version": "1.2.2",
   "identifier": "com.blinko.app",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1111",
-    "beforeBuildCommand": "bun run build:no-pwa",
+    "beforeBuildCommand": "npm run build:no-pwa",
     "frontendDist": "../../dist/public"
   },
   "app": {

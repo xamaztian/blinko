@@ -11,8 +11,9 @@ services:
     build:
       context: .
       args:
-        USE_MIRROR: "true"  
+        USE_MIRROR: "true"
       dockerfile: ./dockerfile
+    platform: linux/arm/v7
     environment:
       NODE_ENV: production
       NEXTAUTH_URL: http://localhost:1111
