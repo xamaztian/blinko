@@ -1,5 +1,5 @@
 import React from 'react';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd-next';
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { FileType } from '../Editor/type';
 import { api } from '@/lib/trpc';
 
