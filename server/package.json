@@ -114,6 +114,7 @@
     "typescript": "^5.8.3"
   },
   "optionalDependencies": {
+    "libsql": "0.4.7",
     "@libsql/linux-arm64-gnu": "0.5.8",
     "@libsql/linux-arm64-musl": "0.5.8",
     "@libsql/linux-x64-gnu": "0.5.8",

@@ -1,5 +1,5 @@
 import { join, resolve, isAbsolute } from 'path';
-import { createClient } from './sqlite3';
+import { createClient, hasLibsql } from './sqlite3';
 import type { Client as TursoClient, InValue } from '@libsql/client';
 
 import { MastraVector, QueryResult, ParamsToArgs, QueryVectorArgs, QueryVectorParams, UpsertVectorParams, CreateIndexParams, IndexStats } from '@mastra/core';
@@ -13,7 +13,8 @@ interface LibSQLQueryParams extends QueryVectorParams {
 type LibSQLQueryArgs = [...QueryVectorArgs, number?];
 
 export class LibSQLVector extends MastraVector {
-  public turso: TursoClient;
+  public turso: TursoClient | null = null;
+  private disabled = false;
 
   constructor({
     connectionUrl,
@@ -27,6 +28,13 @@ export class LibSQLVector extends MastraVector {
     syncInterval?: number;
   }) {
     super();
+
+    if (!hasLibsql) {
+      // On architectures without libsql support, mark vector search as disabled
+      this.disabled = true;
+      console.warn('⚠️ libsql no disponible: vector search deshabilitado en ARMv7');
+      return;
+    }
 
     this.turso = createClient({
       url: this.rewriteDbUrl(connectionUrl),
@@ -79,6 +87,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async query(...args: ParamsToArgs<LibSQLQueryParams> | LibSQLQueryArgs): Promise<QueryResult[]> {
+    if (this.disabled || !this.turso) {
+      return [];
+    }
     //@ts-ignore
     const params = this.normalizeArgs<LibSQLQueryParams, LibSQLQueryArgs>('query', args, ['minScore']);
 
@@ -124,6 +135,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async upsert(...args: ParamsToArgs<UpsertVectorParams>): Promise<string[]> {
+    if (this.disabled || !this.turso) {
+      return [];
+    }
      //@ts-ignore
     const params = this.normalizeArgs<UpsertVectorParams>('upsert', args);
 
@@ -181,7 +195,10 @@ export class LibSQLVector extends MastraVector {
   }
 
   async createIndex(...args: ParamsToArgs<CreateIndexParams>): Promise<void> {
-     //@ts-ignore
+    if (this.disabled || !this.turso) {
+      return;
+    }
+    //@ts-ignore
     const params = this.normalizeArgs<CreateIndexParams>('createIndex', args);
 
     const { indexName, dimension } = params;
@@ -223,6 +240,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async deleteIndex(indexName: string): Promise<void> {
+    if (this.disabled || !this.turso) {
+      return;
+    }
     try {
       // Drop the table
       await this.turso.execute({
@@ -238,6 +258,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async listIndexes(): Promise<string[]> {
+    if (this.disabled || !this.turso) {
+      return [];
+    }
     try {
       const vectorTablesQuery = `
         SELECT name FROM sqlite_master 
@@ -255,6 +278,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async describeIndex(indexName: string): Promise<IndexStats> {
+    if (this.disabled || !this.turso) {
+      return { dimension: 0, count: 0, metric: 'cosine' } as IndexStats;
+    }
     try {
       // Get table info including column info
       const tableInfoQuery = `
@@ -314,6 +340,9 @@ export class LibSQLVector extends MastraVector {
     id: string,
     update: { vector?: number[]; metadata?: Record<string, any> },
   ): Promise<void> {
+    if (this.disabled || !this.turso) {
+      return;
+    }
     try {
       const updates = [];
       const args: InValue[] = [];
@@ -352,6 +381,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async deleteIndexById(indexName: string, id: string): Promise<void> {
+    if (this.disabled || !this.turso) {
+      return;
+    }
     try {
       await this.turso.execute({
         sql: `DELETE FROM ${indexName} WHERE vector_id = ?`,
@@ -363,6 +395,9 @@ export class LibSQLVector extends MastraVector {
   }
 
   async truncateIndex(indexName: string) {
+    if (this.disabled || !this.turso) {
+      return;
+    }
     await this.turso.execute({
       sql: `DELETE FROM ${indexName}`,
       args: [],
