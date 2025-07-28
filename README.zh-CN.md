@@ -60,6 +60,21 @@ Blinko 是一个创新的开源项目，专为那些想要快速捕捉和组织�
 curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | bash
 ```
 
+### ⚠️ 树莓派3内存问题
+
+树莓派3只有 1GB 内存，在执行 `docker-compose build` 时可能会因内存不足而失败。建议在构建前创建临时交换文件：
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+构建完成后可执行 `sudo swapoff /swapfile` 并删除该文件。
+
+Dockerfile 中设置了 `NODE_OPTIONS=--max-old-space-size=512` 来限制 Node 的堆内存，防止因内存不足而导致进程被杀死。对于较大的构建任务，可以拆分构建步骤或在生成 `package-lock.json` 后使用 `npm ci`，以减少 RAM 占用。
+
 ## 👨🏼‍💻贡献
 贡献是开源社区充满活力、创造力和学习机会的核心。你的参与有助于推动创新和发展。我们深深感谢任何形式的贡献，并很高兴有你成为我们社区的一部分。感谢你的支持！🙌
 

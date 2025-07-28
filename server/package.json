@@ -22,17 +22,13 @@
     "@langchain/community": "^0.3.40",
     "@libsql/client": "^0.15.4",
     "@libsql/core": "^0.15.4",
-    "@libsql/linux-arm64-gnu": "0.5.8",
-    "@libsql/linux-arm64-musl": "0.5.8",
-    "@libsql/linux-x64-gnu": "0.5.8",
-    "@libsql/linux-x64-musl": "0.5.8",
     "@mastra/core": "^0.8.2",
     "@mastra/rag": "^0.1.17",
     "@openrouter/ai-sdk-provider": "^0.4.5",
     "@prisma/client": "^5.22.0",
     "@prisma/engines": "^6.5.0",
     "@tavily/core": "^0.3.7",
-    "@trpc/server": "11.1.0",
+    "@trpc/server": "11.4.3",
     "@types/express": "^5.0.1",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
@@ -77,7 +73,7 @@
     "superjson": "^2.2.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "trpc-to-openapi": "^2.0.2",
+    "trpc-to-openapi": "^2.3.2",
     "unfurl.js": "^6.4.0",
     "vite-express": "^0.20.0",
     "voyage-ai-provider": "^1.0.1",
@@ -115,6 +111,12 @@
     "prettier": "^3.2.5",
     "prisma": "5.21.1",
     "tsup": "^8.4.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.8.3"
+  },
+  "optionalDependencies": {
+    "@libsql/linux-arm64-gnu": "0.5.8",
+    "@libsql/linux-arm64-musl": "0.5.8",
+    "@libsql/linux-x64-gnu": "0.5.8",
+    "@libsql/linux-x64-musl": "0.5.8"
   }
 }

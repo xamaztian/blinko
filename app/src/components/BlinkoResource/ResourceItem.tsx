@@ -5,7 +5,7 @@ import filesize  from 'filesize';
 import dayjs from '@/lib/dayjs';
 import { FileIcons } from '@/components/Common/AttachmentRender/FileIcon';
 import { memo, useCallback, useMemo } from 'react';
-import { Draggable, Droppable } from 'react-beautiful-dnd-next';
+import { Draggable, Droppable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next';
 import { type ResourceType } from '@shared/lib/types';
 import { ResourceContextMenu } from './ResourceContextMenu';

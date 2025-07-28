@@ -6,6 +6,9 @@ ARG USE_MIRROR=false
 
 WORKDIR /app
 
+# Limit Node memory usage during build to prevent OOM on devices like Raspberry Pi 3
+ENV NODE_OPTIONS=--max-old-space-size=512
+
 # Set Sharp environment variables to speed up ARM installation
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
@@ -36,7 +39,7 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
     fi
 
 # Install Dependencies and Build App
-RUN npm install --unsafe-perm
+RUN node --max-old-space-size=512 $(which npm) install --legacy-peer-deps --unsafe-perm
 RUN npx prisma generate
 RUN npm --workspace server run build:web && npm --workspace app run build:web
 RUN npm run build:seed
