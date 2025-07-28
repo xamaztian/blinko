@@ -43,6 +43,7 @@
     "filesize": "^8.0.7",
     "i18next-browser-languagedetector": "^8.0.4",
     "i18next-http-backend": "^3.0.2",
+    "i18next": "^23.7.1",
     "markmap-common": "^0.18.9",
     "markmap-lib": "^0.18.11",
     "markmap-view": "^0.18.10",
