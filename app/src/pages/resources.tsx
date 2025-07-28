@@ -5,7 +5,7 @@ import { useMemo, useCallback } from "react";
 import { ScrollArea } from "@/components/Common/ScrollArea";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
-import { DragDropContext, Droppable } from 'react-beautiful-dnd-next';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { toJS } from "mobx";
 import { MemoizedResourceItem } from "@/components/BlinkoResource/ResourceItem";
 import { ResourceMultiSelectPop } from "@/components/BlinkoResource/ResourceMultiSelectpop";

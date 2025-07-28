@@ -53,6 +53,21 @@ Blinko is an innovative open-source project designed for individuals who want to
 curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | bash
 ```
 
+### ⚠️ Memory considerations on Raspberry Pi 3
+
+The Raspberry Pi 3 only has 1 GB of RAM, so `docker-compose build` may fail due to memory pressure. Create a temporary swap file before building:
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+Remove or disable the swap file afterwards if you no longer need it.
+
+The Dockerfile also limits Node's heap via `NODE_OPTIONS=--max-old-space-size=512` to avoid out-of-memory errors. For large builds you can split steps or use a `package-lock.json` with `npm ci` to freeze dependencies and lower RAM usage.
+
 ## 👨🏼‍💻Contribution
 Contributions are the heart of what makes the open-source community so dynamic, creative, and full of learning opportunities. Your involvement helps drive innovation and growth. We deeply value any contribution you make, and we're excited to have you as part of our community. Thank you for your support! 🙌
 
