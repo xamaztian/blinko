@@ -41,6 +41,7 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
 # Install Dependencies and Build App
 RUN node --max-old-space-size=1024 $(which npm) install --legacy-peer-deps --unsafe-perm
 # RUN node --max-old-space-size=1024 $(which npm) ci --legacy-peer-deps --unsafe-perm  # Use when lockfile present
+
 RUN npx prisma generate
 RUN npm --workspace server run build:web && npm --workspace app run build:web
 RUN npm run build:seed
