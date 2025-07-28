@@ -1,4 +1,18 @@
-import Database from "libsql";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
+let Database: any;
+try {
+  // Dynamically require libsql so missing binaries on ARMv7 don't crash
+  Database = require("libsql");
+} catch (e) {
+  console.warn(
+    '⚠️ libsql no disponible: vector search deshabilitado en ARMv7',
+  );
+}
+
+// Export flag so callers can detect if libsql loaded correctly
+export const hasLibsql = Boolean(Database);
 import { Buffer } from "node:buffer";
 
 import type {
@@ -33,6 +47,9 @@ export function createClient(config: Config): Client {
 
 /** @private */
 export function _createClient(config: ExpandedConfig): Client {
+  if (!Database) {
+    throw new Error('libsql module not available on this architecture.');
+  }
   if (config.scheme !== "file") {
     throw new LibsqlError(
       `URL scheme ${JSON.stringify(config.scheme + ":")} is not supported by the local sqlite3 client. ` +

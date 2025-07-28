@@ -68,6 +68,12 @@ Remove or disable the swap file afterwards if you no longer need it.
 
 The Dockerfile also limits Node's heap via `NODE_OPTIONS=--max-old-space-size=512` to avoid out-of-memory errors. For large builds you can split steps or use a `package-lock.json` with `npm ci` to freeze dependencies and lower RAM usage.
 
+### ARMv7 and libsql
+
+`libsql` does not provide prebuilt binaries for the 32‑bit ARMv7 architecture used by the Raspberry Pi 3. The package is now optional and the build skips it on ARMv7.
+This means vector search features that rely on `libsql` are disabled on these devices.
+At runtime Blinkō detects the missing module and logs `⚠️ libsql no disponible: vector search deshabilitado en ARMv7`.
+
 ## 👨🏼‍💻Contribution
 Contributions are the heart of what makes the open-source community so dynamic, creative, and full of learning opportunities. Your involvement helps drive innovation and growth. We deeply value any contribution you make, and we're excited to have you as part of our community. Thank you for your support! 🙌
 

@@ -111,7 +111,9 @@ RUN echo "Installing additional dependencies..." && \
     npm install -g prisma@5.21.1 && \
     npm install sqlite3@5.1.7 && \
     npm install llamaindex @langchain/community@0.3.40 && \
-    npm install @libsql/client @libsql/core && \
+    # libsql only ships arm64/x64 binaries; install fails on armv7 so it's optional
+    # the application detects absence of libsql at runtime and disables vector search
+    npm install @libsql/client @libsql/core || true && \
     npx prisma generate && \
     # find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
     # npm cache clean --force && \
