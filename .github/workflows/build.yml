@@ -1,10 +1,6 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [ "main_armv7" ]
-  pull_request:
-    branches: [ "main_armv7" ]
   workflow_dispatch:
 
 jobs:
