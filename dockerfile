@@ -50,13 +50,12 @@ RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate
     chmod +x start.sh
 
 
-FROM node:20-bullseye as init-downloader
+FROM node:20-alpine as init-downloader
 
 WORKDIR /app
 
-RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_$(uname -m) && \
-    chmod +x /app/dumb-init && \
-    rm -rf /var/lib/apt/lists/*
+RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_amd64 && \
+    chmod +x /app/dumb-init
 
 
 # Runtime Stage - Using Alpine as required
