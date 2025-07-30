@@ -50,13 +50,22 @@ RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate
     chmod +x start.sh
 
 
-FROM node:20-bullseye as init-downloader
+FROM node:20-alpine as init-downloader
 
 WORKDIR /app
 
-RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_$(uname -m) && \
-    chmod +x /app/dumb-init && \
-    rm -rf /var/lib/apt/lists/*
+RUN arch=$(uname -m) && \
+    case "$arch" in \
+      x86_64) arch="amd64" ;; \
+      aarch64) arch="arm64" ;; \
+      armv7l) arch="armhf" ;; \
+      *) echo "Unsupported architecture: $arch" && exit 1 ;; \
+    esac && \
+    url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_$arch" && \
+    echo "Checking availability of $url" && \
+    wget --spider "$url" || (echo "dumb-init binary not found for architecture $arch" && exit 1) && \
+    wget -qO /app/dumb-init "$url" && \
+    chmod +x /app/dumb-init
 
 
 # Runtime Stage - Using Alpine as required
