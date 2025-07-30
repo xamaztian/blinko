@@ -5,6 +5,7 @@ on:
     branches: [ "main_armv7" ]
   pull_request:
     branches: [ "main_armv7" ]
+  workflow_dispatch:
 
 jobs:
 
