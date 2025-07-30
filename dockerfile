@@ -113,7 +113,7 @@ RUN echo "Installing additional dependencies..." && \
     npm install llamaindex @langchain/community@0.3.40 && \
     # libsql only ships arm64/x64 binaries; install fails on armv7 so it's optional
     # the application detects absence of libsql at runtime and disables vector search
-    npm install @libsql/client @libsql/core || true && \
+    npm install @libsql/client @libsql/core libsql || true && \
     npx prisma generate && \
     # find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
     # npm cache clean --force && \
