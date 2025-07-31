@@ -54,11 +54,19 @@ FROM node:20-alpine as init-downloader
 
 WORKDIR /app
 
-# Fetch the universal dumb-init binary rather than using architecture-specific
-# suffixes which do not exist in upstream releases. This static binary works on
-# all supported platforms under QEMU emulation as well.
-RUN wget -qO /app/dumb-init \
-        https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5 && \
+# Download the dumb-init binary with architecture suffix mapping. This avoids
+# 404 errors that occur if the architecture name does not match the binaries
+# published by Yelp. It works under QEMU emulation used in GitHub Actions.
+RUN arch=$(uname -m) && \
+    case "$arch" in \
+      x86_64)   arch="amd64" ;; \
+      aarch64)  arch="arm64" ;; \
+      armv7l)   arch="armhf" ;; \
+      *) echo "Unsupported architecture: $arch" && exit 1 ;; \
+    esac && \
+    url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${arch}" && \
+    echo "Fetching $url" && \
+    wget -qO /app/dumb-init "$url" && \
     chmod +x /app/dumb-init && \
     ls -lh /app/dumb-init && \
     rm -rf /var/cache/apk/*
