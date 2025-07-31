@@ -63,11 +63,16 @@ RUN --mount=type=cache,target=/root/.npm \
   fi && \
   chmod +x ./start.sh && \
   echo "Instalando dependencias adicionales..." && \
+  ARCH=$(uname -m) && \
   npm install @node-rs/crc32 lightningcss sharp@0.34.1 prisma@5.21.1 && \
   npm install -g prisma@5.21.1 && \
   npm install sqlite3@5.1.7 && \
   npm install llamaindex @langchain/community@0.3.40 && \
-  npm install @libsql/client @libsql/core libsql || true && \
+  if [ "$ARCH" = "armv7l" ]; then \
+    echo "libsql no disponible en $ARCH, omitiendo instalación..."; \
+  else \
+    npm install @libsql/client @libsql/core libsql || true; \
+  fi && \
   npx prisma generate && \
   rm -rf /tmp/* && \
   apt-get purge -y python3 make g++ gcc build-essential && \
