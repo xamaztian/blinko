@@ -54,8 +54,14 @@ FROM node:20-alpine as init-downloader
 
 WORKDIR /app
 
-RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_amd64 && \
-    chmod +x /app/dumb-init
+# Fetch the universal dumb-init binary rather than using architecture-specific
+# suffixes which do not exist in upstream releases. This static binary works on
+# all supported platforms under QEMU emulation as well.
+RUN wget -qO /app/dumb-init \
+        https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5 && \
+    chmod +x /app/dumb-init && \
+    ls -lh /app/dumb-init && \
+    rm -rf /var/cache/apk/*
 
 
 # Runtime Stage - Using Alpine as required
