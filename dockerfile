@@ -68,11 +68,12 @@ RUN arch=$(uname -m) && \
         esac; \
         url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${arch}"; \
     fi && \
-    echo "Downloading: $url" && \
+    echo "Fetching $url" && \
     wget -qO /app/dumb-init "$url" && \
     chmod +x /app/dumb-init && \
     ls -lh /app/dumb-init && \
     rm -rf /var/cache/apk/*
+
 
 
 # Runtime Stage - Using Alpine as required
