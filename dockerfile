@@ -58,14 +58,17 @@ WORKDIR /app
 # 404 errors that occur if the architecture name does not match the binaries
 # published by Yelp. It works under QEMU emulation used in GitHub Actions.
 RUN arch=$(uname -m) && \
-    case "$arch" in \
-      x86_64)   arch="amd64" ;; \
-      aarch64)  arch="arm64" ;; \
-      armv7l)   arch="armhf" ;; \
-      *) echo "Unsupported architecture: $arch" && exit 1 ;; \
-    esac && \
-    url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${arch}" && \
-    echo "Fetching $url" && \
+    if [ "$arch" = "armv7l" ]; then \
+        url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_arm"; \
+    else \
+        case "$arch" in \
+          x86_64)   arch="amd64" ;; \
+          aarch64)  arch="arm64" ;; \
+          *) echo "Unsupported architecture: $arch" && exit 1 ;; \
+        esac; \
+        url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${arch}"; \
+    fi && \
+    echo "Downloading: $url" && \
     wget -qO /app/dumb-init "$url" && \
     chmod +x /app/dumb-init && \
     ls -lh /app/dumb-init && \
