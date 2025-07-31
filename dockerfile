@@ -1,65 +1,59 @@
 # Build Stage
 FROM --platform=linux/arm/v7 node:20-bullseye AS builder
 
-# Add Build Arguments
 ARG USE_MIRROR=false
-
 WORKDIR /app
-
-# Limit Node memory usage during build to prevent OOM on devices like Raspberry Pi 3
-ENV NODE_OPTIONS=--max-old-space-size=1024
 
 # Set Sharp environment variables to speed up ARM installation
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-# Set Prisma environment variables to optimize installation
+# Prisma optimizations
 ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
-# Copy Project Files
 COPY . .
 
-# Configure Mirror Based on USE_MIRROR Parameter
+# Configure npm mirror
 RUN if [ "$USE_MIRROR" = "true" ]; then \
-        echo "Using Taobao Mirror to Install Dependencies" && \
-        npm config set registry https://registry.npmmirror.com; \
+      echo "Using Taobao Mirror" && npm config set registry https://registry.npmmirror.com; \
     else \
-        echo "Using Default Mirror to Install Dependencies"; \
+      echo "Using Default Mirror"; \
     fi
 
+# Install dependencies and build
 RUN --mount=type=cache,target=/root/.npm \
-    if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
-        echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
-        mkdir -p /tmp/sharp-cache && \
-        export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
-        npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
-        npm install --force @img/sharp-linux-arm64 --no-save; \
-    fi && \
-    node --max-old-space-size=1024 $(which npm) install --legacy-peer-deps --unsafe-perm && \
-    npx prisma generate && \
-    npm --workspace server run build:web && npm --workspace app run build:web && \
-    npm run build:seed && \
-    printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
-    chmod +x start.sh
-
+  ARCH=$(uname -m) && \
+  NODE_MEM="" && \
+  if [ "$ARCH" = "armv7l" ]; then \
+    echo "Detected ARMv7, limiting Node memory..." && \
+    NODE_MEM="--max-old-space-size=1024"; \
+  fi && \
+  if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+    echo "Installing sharp for ARM64..." && \
+    mkdir -p /tmp/sharp-cache && \
+    export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
+    npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+    npm install --force @img/sharp-linux-arm64 --no-save; \
+  fi && \
+  node $NODE_MEM $(which npm) install --legacy-peer-deps --unsafe-perm && \
+  npx prisma generate && \
+  npm --workspace server run build:web && \
+  npm --workspace app run build:web && \
+  npm run build:seed && \
+  printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
+  chmod +x start.sh
 
 # Runtime Stage
 FROM --platform=linux/arm/v7 node:20-bullseye AS runner
 
-# Add Build Arguments
 ARG USE_MIRROR=false
-
 WORKDIR /app
 
-# Environment Variables
 ENV NODE_ENV=production
-# If there is a proxy or load balancer behind HTTPS, you may need to disable secure cookies
 ENV DISABLE_SECURE_COOKIE=false
-# Set Trust Proxy
 ENV TRUST_PROXY=1
-# Set Sharp environment variables
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
@@ -71,36 +65,33 @@ COPY --from=builder /app/node_modules/.prisma/client ./node_modules/.prisma/clie
 COPY --from=builder /app/start.sh ./
 
 RUN --mount=type=cache,target=/root/.npm \
-    apt-get update && apt-get install -y openssl libvips-dev python3 make g++ gcc build-essential && \
-    if [ "$USE_MIRROR" = "true" ]; then \
-        echo "Using Taobao Mirror to Install Dependencies" && \
-        npm config set registry https://registry.npmmirror.com; \
-    else \
-        echo "Using Default Mirror to Install Dependencies"; \
-    fi && \
-    chmod +x ./start.sh && \
-    ls -la start.sh && \
-    if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "armv7l" ]; then \
-        echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
-        mkdir -p /tmp/sharp-cache && \
-        export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
-        npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
-        npm install --force @img/sharp-linux-arm64 --no-save; \
-    fi && \
-    echo "Installing additional dependencies..." && \
-    npm install @node-rs/crc32 lightningcss sharp@0.34.1 prisma@5.21.1 && \
-    npm install -g prisma@5.21.1 && \
-    npm install sqlite3@5.1.7 && \
-    npm install llamaindex @langchain/community@0.3.40 && \
-    # libsql only ships arm64/x64 binaries; install fails on armv7 so it's optional
-    # the application detects absence of libsql at runtime and disables vector search
-    npm install @libsql/client @libsql/core libsql || true && \
-    npx prisma generate && \
-    rm -rf /tmp/* && \
-    apt-get purge -y python3 make g++ gcc build-essential && \
-    rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
+  apt-get update && apt-get install -y \
+    openssl libvips-dev python3 make g++ gcc build-essential && \
+  if [ "$USE_MIRROR" = "true" ]; then \
+    echo "Using Taobao Mirror" && npm config set registry https://registry.npmmirror.com; \
+  else \
+    echo "Using Default Mirror"; \
+  fi && \
+  chmod +x ./start.sh && \
+  ls -la start.sh && \
+  ARCH=$(uname -m) && \
+  if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+    echo "Installing sharp for ARM64..." && \
+    mkdir -p /tmp/sharp-cache && \
+    export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
+    npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+    npm install --force @img/sharp-linux-arm64 --no-save; \
+  fi && \
+  echo "Installing additional dependencies..." && \
+  npm install @node-rs/crc32 lightningcss sharp@0.34.1 prisma@5.21.1 && \
+  npm install -g prisma@5.21.1 && \
+  npm install sqlite3@5.1.7 && \
+  npm install llamaindex @langchain/community@0.3.40 && \
+  npm install @libsql/client @libsql/core libsql || true && \
+  npx prisma generate && \
+  rm -rf /tmp/* && \
+  apt-get purge -y python3 make g++ gcc build-essential && \
+  rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
-# Expose Port (Adjust According to Actual Application)
 EXPOSE 1111
-
 CMD ["./start.sh"]
