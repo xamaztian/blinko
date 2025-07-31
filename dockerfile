@@ -1,5 +1,5 @@
 # Build Stage
-FROM --platform=linux/arm/v7 node:20-bullseye AS builder
+FROM node:20-bullseye AS builder
 
 ARG USE_MIRROR=false
 
@@ -13,31 +13,30 @@ ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
 COPY . .
 
-# Configura mirror opcional
 RUN if [ "$USE_MIRROR" = "true" ]; then \
       npm config set registry https://registry.npmmirror.com; \
     fi
 
-# Instala dependencias y construye sin limitar recursos en Actions
 RUN --mount=type=cache,target=/root/.npm \
-  ARCH=$(uname -m) && \
-  if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
-    echo "Instalando SHARP ARM64..." && \
-    mkdir -p /tmp/sharp-cache && \
-    export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
-    npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
-    npm install --force @img/sharp-linux-arm64 --no-save; \
-  fi && \
-  npm install --legacy-peer-deps --unsafe-perm && \
-  npx prisma generate && \
-  npm --workspace server run build:web && \
-  npm --workspace app run build:web && \
-  npm run build:seed && \
-  printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
-  chmod +x start.sh
+  /bin/sh -c '\
+    ARCH=$(uname -m); \
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+      echo "Instalando SHARP ARM64..."; \
+      mkdir -p /tmp/sharp-cache; \
+      export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache; \
+      npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+      npm install --force @img/sharp-linux-arm64 --no-save; \
+    fi; \
+    npm install --legacy-peer-deps --unsafe-perm; \
+    npx prisma generate; \
+    npm --workspace server run build:web; \
+    npm --workspace app run build:web; \
+    npm run build:seed; \
+    printf "#!/bin/sh\necho \"Current Environment: \$NODE_ENV\"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n" > start.sh; \
+    chmod +x start.sh;'
 
 # Runtime Stage
-FROM --platform=linux/arm/v7 node:20-bullseye AS runner
+FROM node:20-bullseye AS runner
 
 ARG USE_MIRROR=false
 
@@ -56,7 +55,6 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma/client ./node_modules/.prisma/client
 COPY --from=builder /app/start.sh ./
 
-# Instala dependencias runtime en Raspberry Pi (donde sí es relevante limitar)
 RUN --mount=type=cache,target=/root/.npm \
   apt-get update && apt-get install -y \
     openssl libvips-dev python3 make g++ gcc build-essential && \
