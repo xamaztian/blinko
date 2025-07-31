@@ -80,7 +80,7 @@ RUN --mount=type=cache,target=/root/.npm \
     fi && \
     chmod +x ./start.sh && \
     ls -la start.sh && \
-    if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "armv7l" ]
+    if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "armv7l" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
         export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
