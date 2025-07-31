@@ -50,13 +50,29 @@ RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate
     chmod +x start.sh
 
 
-FROM node:20-bullseye as init-downloader
+FROM node:20-alpine as init-downloader
 
 WORKDIR /app
 
-RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_$(uname -m) && \
+# Download the dumb-init binary with architecture suffix mapping. This avoids
+# 404 errors that occur if the architecture name does not match the binaries
+# published by Yelp. It works under QEMU emulation used in GitHub Actions.
+RUN arch=$(uname -m) && \
+    if [ "$arch" = "armv7l" ]; then \
+        arch="arm"; \
+    elif [ "$arch" = "x86_64" ]; then \
+        arch="amd64"; \
+    elif [ "$arch" = "aarch64" ]; then \
+        arch="arm64"; \
+    else \
+        echo "Unsupported architecture: $arch" && exit 1; \
+    fi && \
+    url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${arch}" && \
+    echo "Fetching $url" && \
+    wget -qO /app/dumb-init "$url" && \
     chmod +x /app/dumb-init && \
     rm -rf /var/lib/apt/lists/*
+
 
 
 # Runtime Stage - Using Alpine as required
