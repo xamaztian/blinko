@@ -25,6 +25,18 @@ import pluginRouter from './routerExpress/file/plugin';
 import rssRouter from './routerExpress/rss';
 import openaiRouter from './routerExpress/openai';
 
+// Attempt to require libsql on startup. If not available (e.g. on ARMv7),
+// gracefully disable vector search features.
+import { createRequire } from 'module';
+const requireLib = createRequire(import.meta.url);
+try {
+  requireLib('@libsql/client');
+} catch (e) {
+  console.warn(
+    'libsql no está disponible en esta arquitectura. Desactivando búsqueda vectorial.'
+  );
+}
+
 // Vite integration
 import ViteExpress from 'vite-express';
 
