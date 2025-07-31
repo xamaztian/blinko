@@ -2,42 +2,33 @@
 FROM --platform=linux/arm/v7 node:20-bullseye AS builder
 
 ARG USE_MIRROR=false
+
 WORKDIR /app
 
-# Set Sharp environment variables to speed up ARM installation
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
-
-# Prisma optimizations
 ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
 COPY . .
 
-# Configure npm mirror
+# Configura mirror opcional
 RUN if [ "$USE_MIRROR" = "true" ]; then \
-      echo "Using Taobao Mirror" && npm config set registry https://registry.npmmirror.com; \
-    else \
-      echo "Using Default Mirror"; \
+      npm config set registry https://registry.npmmirror.com; \
     fi
 
-# Install dependencies and build
+# Instala dependencias y construye sin limitar recursos en Actions
 RUN --mount=type=cache,target=/root/.npm \
   ARCH=$(uname -m) && \
-  NODE_MEM="" && \
-  if [ "$ARCH" = "armv7l" ]; then \
-    echo "Detected ARMv7, limiting Node memory..." && \
-    NODE_MEM="--max-old-space-size=1024"; \
-  fi && \
   if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
-    echo "Installing sharp for ARM64..." && \
+    echo "Instalando SHARP ARM64..." && \
     mkdir -p /tmp/sharp-cache && \
     export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
     npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
     npm install --force @img/sharp-linux-arm64 --no-save; \
   fi && \
-  node $NODE_MEM $(which npm) install --legacy-peer-deps --unsafe-perm && \
+  npm install --legacy-peer-deps --unsafe-perm && \
   npx prisma generate && \
   npm --workspace server run build:web && \
   npm --workspace app run build:web && \
@@ -49,6 +40,7 @@ RUN --mount=type=cache,target=/root/.npm \
 FROM --platform=linux/arm/v7 node:20-bullseye AS runner
 
 ARG USE_MIRROR=false
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -64,25 +56,15 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma/client ./node_modules/.prisma/client
 COPY --from=builder /app/start.sh ./
 
+# Instala dependencias runtime en Raspberry Pi (donde sí es relevante limitar)
 RUN --mount=type=cache,target=/root/.npm \
   apt-get update && apt-get install -y \
     openssl libvips-dev python3 make g++ gcc build-essential && \
   if [ "$USE_MIRROR" = "true" ]; then \
-    echo "Using Taobao Mirror" && npm config set registry https://registry.npmmirror.com; \
-  else \
-    echo "Using Default Mirror"; \
+    npm config set registry https://registry.npmmirror.com; \
   fi && \
   chmod +x ./start.sh && \
-  ls -la start.sh && \
-  ARCH=$(uname -m) && \
-  if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
-    echo "Installing sharp for ARM64..." && \
-    mkdir -p /tmp/sharp-cache && \
-    export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
-    npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
-    npm install --force @img/sharp-linux-arm64 --no-save; \
-  fi && \
-  echo "Installing additional dependencies..." && \
+  echo "Instalando dependencias adicionales..." && \
   npm install @node-rs/crc32 lightningcss sharp@0.34.1 prisma@5.21.1 && \
   npm install -g prisma@5.21.1 && \
   npm install sqlite3@5.1.7 && \
@@ -94,4 +76,5 @@ RUN --mount=type=cache,target=/root/.npm \
   rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
 EXPOSE 1111
+
 CMD ["./start.sh"]
