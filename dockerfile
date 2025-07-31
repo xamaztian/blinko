@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:20-bullseye AS builder
+FROM --platform=linux/arm/v7 node:20-bullseye AS builder
 
 # Add Build Arguments
 ARG USE_MIRROR=false
@@ -29,54 +29,24 @@ RUN if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Default Mirror to Install Dependencies"; \
     fi
 
-# Pre-install Sharp for ARM architecture
-RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
+RUN --mount=type=cache,target=/root/.npm \
+    if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
         export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
         npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
         npm install --force @img/sharp-linux-arm64 --no-save; \
-    fi
-
-# Install Dependencies and Build App
-RUN node --max-old-space-size=1024 $(which npm) install --legacy-peer-deps --unsafe-perm
-# RUN node --max-old-space-size=1024 $(which npm) ci --legacy-peer-deps --unsafe-perm  # Use when lockfile present
-
-RUN npx prisma generate
-RUN npm --workspace server run build:web && npm --workspace app run build:web
-RUN npm run build:seed
-
-RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
+    fi && \
+    node --max-old-space-size=1024 $(which npm) install --legacy-peer-deps --unsafe-perm && \
+    npx prisma generate && \
+    npm --workspace server run build:web && npm --workspace app run build:web && \
+    npm run build:seed && \
+    printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
     chmod +x start.sh
 
 
-FROM node:20-alpine as init-downloader
-
-WORKDIR /app
-
-# Download the dumb-init binary with architecture suffix mapping. This avoids
-# 404 errors that occur if the architecture name does not match the binaries
-# published by Yelp. It works under QEMU emulation used in GitHub Actions.
-RUN arch=$(uname -m) && \
-    if [ "$arch" = "armv7l" ]; then \
-        arch="arm"; \
-    elif [ "$arch" = "x86_64" ]; then \
-        arch="amd64"; \
-    elif [ "$arch" = "aarch64" ]; then \
-        arch="arm64"; \
-    else \
-        echo "Unsupported architecture: $arch" && exit 1; \
-    fi && \
-    url="https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${arch}" && \
-    echo "Fetching $url" && \
-    wget -qO /app/dumb-init "$url" && \
-    chmod +x /app/dumb-init && \
-    rm -rf /var/lib/apt/lists/*
-
-
-
-# Runtime Stage - Using Alpine as required
-FROM node:20-bullseye AS runner
+# Runtime Stage
+FROM --platform=linux/arm/v7 node:20-bullseye AS runner
 
 # Add Build Arguments
 ARG USE_MIRROR=false
@@ -94,35 +64,30 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-RUN apt-get update && apt-get install -y openssl libvips-dev python3 make g++ gcc build-essential && \
-    if [ "$USE_MIRROR" = "true" ]; then \
-        echo "Using Taobao Mirror to Install Dependencies" && \
-        npm config set registry https://registry.npmmirror.com; \
-    else \
-        echo "Using Default Mirror to Install Dependencies"; \
-    fi
-
-# Copy Build Artifacts and Necessary Files
 COPY --from=builder /app/dist ./server
 COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma/client ./node_modules/.prisma/client
 COPY --from=builder /app/start.sh ./
-COPY --from=init-downloader /app/dumb-init /usr/local/bin/dumb-init
 
-RUN chmod +x ./start.sh && \
-    ls -la start.sh
-
-RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
+RUN --mount=type=cache,target=/root/.npm \
+    apt-get update && apt-get install -y openssl libvips-dev python3 make g++ gcc build-essential && \
+    if [ "$USE_MIRROR" = "true" ]; then \
+        echo "Using Taobao Mirror to Install Dependencies" && \
+        npm config set registry https://registry.npmmirror.com; \
+    else \
+        echo "Using Default Mirror to Install Dependencies"; \
+    fi && \
+    chmod +x ./start.sh && \
+    ls -la start.sh && \
+    if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
         export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
         npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
         npm install --force @img/sharp-linux-arm64 --no-save; \
-    fi
-
-# Install dependencies with --ignore-scripts to skip native compilation
-RUN echo "Installing additional dependencies..." && \
+    fi && \
+    echo "Installing additional dependencies..." && \
     npm install @node-rs/crc32 lightningcss sharp@0.34.1 prisma@5.21.1 && \
     npm install -g prisma@5.21.1 && \
     npm install sqlite3@5.1.7 && \
@@ -131,8 +96,6 @@ RUN echo "Installing additional dependencies..." && \
     # the application detects absence of libsql at runtime and disables vector search
     npm install @libsql/client @libsql/core libsql || true && \
     npx prisma generate && \
-    # find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
-    # npm cache clean --force && \
     rm -rf /tmp/* && \
     apt-get purge -y python3 make g++ gcc build-essential && \
     rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
@@ -140,4 +103,4 @@ RUN echo "Installing additional dependencies..." && \
 # Expose Port (Adjust According to Actual Application)
 EXPOSE 1111
 
-CMD ["/usr/local/bin/dumb-init", "--", "/bin/sh", "-c", "./start.sh"]
+CMD ["./start.sh"]
